@@ -20,6 +20,6 @@
     },
     "telegram": {
         "bot_token": "xxxxxxxxxx:xxxxxxxx_xxxxxxxxxxxxxxxxxxxxxxxxxx", 
-        "chat_id": "xxxxxxxxx", 
+        "chat_id": "xxxxxxxxx"
     }
 }
