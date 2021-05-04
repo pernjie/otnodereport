@@ -1,0 +1,25 @@
+{
+    "nodes": [
+        {
+            "node_name": "Node 1",
+            "node_id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        },
+        {
+            "node_name": "Node 2",
+            "node_id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        },
+        {
+            "node_name": "Node 3",
+            "node_id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        }
+    ],
+    "report_frequency": {
+        "days": 1,
+        "hours": 0,
+        "minutes": 0
+    },
+    "telegram": {
+        "bot_token": "xxxxxxxxxx:xxxxxxxx_xxxxxxxxxxxxxxxxxxxxxxxxxx", 
+        "chat_id": "xxxxxxxxx", 
+    }
+}
