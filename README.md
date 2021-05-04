@@ -81,7 +81,7 @@ journalctl -u otnodereport.service -f
 
 To stop the service:
 ```
-sudo systemctl restart otnodereport.service
+sudo systemctl stop otnodereport.service
 ```
 
 If you made any config changes, be sure to restart the service again.
