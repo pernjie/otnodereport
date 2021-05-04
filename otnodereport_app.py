@@ -20,7 +20,7 @@ config = None
 
 def main():
     if not os.path.isfile(CONFIG_PATH) or not os.access(CONFIG_PATH, os.R_OK):
-        print (f"File config.json missing or not readable!")
+        print(f"File config.json missing or not readable!")
         sys.exit()
     
     global config
@@ -30,14 +30,26 @@ def main():
     required_fields = ['nodes', 'report_frequency', 'telegram']
     for field in required_fields:
         if not config.get(field):
-            print (f"Missing config field '{field}'")
+            print(f"Missing config field '{field}'")
             sys.exit()
 
     report_frequency = config['report_frequency']
     days, hours, minutes = report_frequency['days'], report_frequency['hours'], report_frequency['minutes']
 
+    # For longer durations, add some jitter so API server doesn't get congested
+    if minutes > 0:
+        jitter = 0
+    else:
+        jitter = 60
+
     sched = BlockingScheduler()
-    sched.add_job(job, 'interval', days=days, hours=hours, minutes=minutes, start_date=config.get('report_start', '2021-01-01 00:00:00'), jitter=0)
+    sched.add_job(job, 'interval', 
+        days=days, 
+        hours=hours, 
+        minutes=minutes, 
+        start_date=config.get('report_start', '2021-01-01 00:00:00'), 
+        jitter=jitter
+    )
     curr_datetime = datetime.utcnow()
     curr_datetime_str = curr_datetime.strftime("%Y-%m-%d %H:%M:%S")
     print(f'Scheduler started at {curr_datetime_str}.')
@@ -130,6 +142,11 @@ def get_recent_jobs(node_id, prev_datetime):
             break
 
         page += 1
+
+        # Handle any weird cases causing infinite loop
+        if page > 1000:
+            print("Too many loops!")
+            break
         
     return recent_jobs
 
