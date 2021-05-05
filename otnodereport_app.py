@@ -58,7 +58,10 @@ def main():
 
 def job():
     report = generate_report()
-    result = send_telegram_message(report)
+
+    # Only send if report is generated
+    if report:
+    	result = send_telegram_message(report)
 
 
 def display_time(minutes):
@@ -223,7 +226,11 @@ def report_jobs(curr_datetime):
     report_str = ""
     
     if len(all_recent_jobs) == 0:
-        report_str += f'No new jobs since {prev_datetime_str} ({frequency_display} ago)'
+    	if config.get('skip_jobless_notification'):
+    		print('No recent jobs, returning null..')
+    		return None
+    	else:
+        	report_str += f'No new jobs since {prev_datetime_str} ({frequency_display} ago)'
     elif len(all_recent_jobs) == 1:
         report_str += f'1 new job since {prev_datetime_str} ({frequency_display} ago)\n\n'
     else:
@@ -253,11 +260,17 @@ def generate_report():
     curr_datetime_str = curr_datetime.strftime("%Y-%m-%d %H:%M:%S")
     report_str = f"Report for {curr_datetime_str}\n\n"
     
-    report_str += report_overview()
-    report_str += "\n\n"
-    report_str += report_jobs(curr_datetime)
+    overview_str = report_overview()
+    job_str = report_jobs(curr_datetime)
+
+    if overview_str and job_str:
+	    report_str += overview_str
+	    report_str += "\n\n"
+	    report_str += job_str
     
-    return report_str
+    	return report_str
+    else:
+    	return None
 
 
 def send_telegram_message(message):
