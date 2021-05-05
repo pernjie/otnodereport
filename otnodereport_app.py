@@ -34,25 +34,30 @@ def main():
             sys.exit()
 
     report_frequency = config['report_frequency']
-    days, hours, minutes = report_frequency['days'], report_frequency['hours'], report_frequency['minutes']
+    frequency_days, frequency_hours, frequency_mins = report_frequency['days'], report_frequency['hours'], report_frequency['minutes']
 
     # For longer durations, add some jitter so API server doesn't get congested
-    if minutes > 0:
+    if frequency_mins > 0:
         jitter = 0
     else:
         jitter = 60
 
+    start_date = datetime.strptime(config.get('report_start', '2021-01-01 00:00:00'), "%Y-%m-%d %H:%M:%S")
+    start_date -= timedelta(hours=config.get('gmt_offset', 0))
+    start_date = start_date.strftime("%Y-%m-%dT%H:%M:%S")
+
     sched = BlockingScheduler()
     sched.add_job(job, 'interval', 
-        days=days, 
-        hours=hours, 
-        minutes=minutes, 
-        start_date=config.get('report_start', '2021-01-01 00:00:00'), 
+        days=frequency_days, 
+        hours=frequency_hours, 
+        minutes=frequency_mins, 
+        start_date=start_date, 
         jitter=jitter
     )
     curr_datetime = datetime.utcnow()
-    curr_datetime_str = curr_datetime.strftime("%Y-%m-%d %H:%M:%S")
-    print(f'Scheduler started at {curr_datetime_str}.')
+    curr_datetime_str = format_timestamp(curr_datetime)
+    frequency_display = display_time(frequency_days * 60 * 24 + frequency_hours * 60 + frequency_mins)
+    print(f'Scheduler started at {curr_datetime_str}, notifications every {frequency_display}.')
     sched.start()
 
 
@@ -61,7 +66,7 @@ def job():
 
     # Only send if report is generated
     if report:
-    	result = send_telegram_message(report)
+        result = send_telegram_message(report)
 
 
 def display_time(minutes):
@@ -79,6 +84,20 @@ def display_time(minutes):
                 name = name.rstrip('s')
             result.append("{} {}".format(value, name))
     return ', '.join(result)
+
+
+def format_timestamp(timestamp):
+    """
+    Adjusts UTC timestamp to local time and formats for display
+    :param timestamp: Timestamp in datetime form
+    :return: Formatted timestamp in string form
+    """
+    if type(timestamp) is str:
+        timestamp = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S")
+    timestamp += timedelta(hours=config.get('gmt_offset', 0))
+    timestamp = timestamp.strftime("%Y-%m-%d %H:%M:%S")
+
+    return timestamp
 
 
 def call_othub_api(url):
@@ -203,7 +222,7 @@ def report_jobs(curr_datetime):
     )
 
     # Formatting strings
-    prev_datetime_str = prev_datetime.strftime("%Y-%m-%d %H:%M:%S")
+    prev_datetime_str = format_timestamp(prev_datetime)
     frequency_display = display_time(frequency_days * 60 * 24 + frequency_hours * 60 + frequency_mins)
     
     print(f'Searching for jobs after {prev_datetime_str} ({frequency_display} ago)..\n')
@@ -226,12 +245,12 @@ def report_jobs(curr_datetime):
     report_str = ""
     
     if len(all_recent_jobs) == 0:
-    	# Skip if no recent jobs and config indicates not to notify
-    	if config.get('skip_jobless_notification'):
-    		print('No recent jobs, returning null..')
-    		return None
-    	else:
-        	report_str += f'No new jobs since {prev_datetime_str} ({frequency_display} ago)'
+        # Skip if no recent jobs and config indicates not to notify
+        if config.get('skip_jobless_notification'):
+            print('No recent jobs, returning null..')
+            return None
+        else:
+            report_str += f'No new jobs since {prev_datetime_str} ({frequency_display} ago)'
     elif len(all_recent_jobs) == 1:
         report_str += f'1 new job since {prev_datetime_str} ({frequency_display} ago)\n'
     else:
@@ -243,11 +262,12 @@ def report_jobs(curr_datetime):
             offer_id = recent_job['OfferId']
             node_name = recent_job['NodeName']
             job_start = recent_job['FinalizedTimestamp']
-            job_start = datetime.strptime(job_start, "%Y-%m-%dT%H:%M:%S")
+            job_start = format_timestamp(job_start)
             token_amount = recent_job['TokenAmountPerHolder']
             holding_time = recent_job['HoldingTimeInMinutes']
             holding_time = display_time(holding_time)
-            report_str += f'\nOffer {offer_id}\nNode: {node_name}\nToken Amount: {token_amount}\nHolding Time: {holding_time}\n'
+            report_str += f'\nOffer {offer_id}\nNode: {node_name}\nJob Start: {job_start}\n' \
+                          f'Token Amount: {token_amount}\nHolding Time: {holding_time}\n'
         report_str += "----------------------------------------------"
     
     return report_str
@@ -258,7 +278,7 @@ def generate_report():
     Combines the text portions of report into one
     """
     curr_datetime = datetime.utcnow()
-    curr_datetime_str = curr_datetime.strftime("%Y-%m-%d %H:%M:%S")
+    curr_datetime_str = format_timestamp(curr_datetime)
     report_str = f"Report for {curr_datetime_str}\n\n"
     
     overview_str = report_overview()
@@ -271,7 +291,7 @@ def generate_report():
 
         return report_str
     else:
-    	return None
+        return None
 
 
 def send_telegram_message(message):
