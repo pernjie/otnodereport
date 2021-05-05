@@ -226,13 +226,14 @@ def report_jobs(curr_datetime):
     report_str = ""
     
     if len(all_recent_jobs) == 0:
+    	# Skip if no recent jobs and config indicates not to notify
     	if config.get('skip_jobless_notification'):
     		print('No recent jobs, returning null..')
     		return None
     	else:
         	report_str += f'No new jobs since {prev_datetime_str} ({frequency_display} ago)'
     elif len(all_recent_jobs) == 1:
-        report_str += f'1 new job since {prev_datetime_str} ({frequency_display} ago)\n\n'
+        report_str += f'1 new job since {prev_datetime_str} ({frequency_display} ago)\n'
     else:
         report_str += f'{len(all_recent_jobs)} new jobs since {prev_datetime_str} ({frequency_display} ago)\n'
     
@@ -264,11 +265,11 @@ def generate_report():
     job_str = report_jobs(curr_datetime)
 
     if overview_str and job_str:
-	    report_str += overview_str
-	    report_str += "\n\n"
-	    report_str += job_str
-    
-    	return report_str
+        report_str += overview_str
+        report_str += "\n\n"
+        report_str += job_str
+
+        return report_str
     else:
     	return None
 
