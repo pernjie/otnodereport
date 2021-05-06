@@ -45,8 +45,9 @@ The mandatory fields `nodes`, `report_frequency`, and `telegram` should be self-
 You may also choose to add any of the following optional fields:
 Field  | Type | Default | Description
 ------ | ---- | ------- | -----------
-`gmt_offset` | number |0 | GMT offset to convert all timestamps for display purposes only.
+`gmt_offset` | number | 0 | GMT offset to convert all timestamps for display purposes only.
 `report_start` | string | 2021-01-01 00:00:00 | To specify when the scheduled intervals start, useful for if you want daily reports to come in at a certain time of the day. This will follow the defined GMT offset if configured above.
+`timestamp_format` | string | %Y-%m-%d %H:%M:%S | Format to display all timestamps of a notification (in [strftime](http://www.google.fr/) format)
 `skip_jobless_notification` | bool | false | If set to true, you will not receive a notification if the nodes didn't score any new jobs.
 
 3) Install required libraries. If your server doesn't have Python (minimally Python 3.8) or pip, you will have to install them as well. If you are using the Digital Ocean server, it should come with Python by default. 

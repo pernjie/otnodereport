@@ -55,7 +55,7 @@ def main():
         jitter=jitter
     )
     curr_datetime = datetime.utcnow()
-    curr_datetime_str = format_timestamp(curr_datetime)
+    curr_datetime_str = format_timestamp(curr_datetime, timestamp_format="%Y-%m-%d %H:%M:%S")
     frequency_display = display_time(frequency_days * 60 * 24 + frequency_hours * 60 + frequency_mins)
     print(f'Scheduler started at {curr_datetime_str}, notifications every {frequency_display}.')
     sched.start()
@@ -86,7 +86,7 @@ def display_time(minutes):
     return ', '.join(result)
 
 
-def format_timestamp(timestamp):
+def format_timestamp(timestamp, timestamp_format=None):
     """
     Adjusts UTC timestamp to local time and formats for display
     :param timestamp: Timestamp in datetime form
@@ -95,7 +95,10 @@ def format_timestamp(timestamp):
     if type(timestamp) is str:
         timestamp = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S")
     timestamp += timedelta(hours=config.get('gmt_offset', 0))
-    timestamp = timestamp.strftime("%Y-%m-%d %H:%M:%S")
+
+    if not timestamp_format:
+        timestamp_format = config.get('timestamp_format', "%Y-%m-%d %H:%M:%S")
+    timestamp = timestamp.strftime(timestamp_format)
 
     return timestamp
 
